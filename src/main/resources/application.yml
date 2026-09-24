@@ -1,0 +1,45 @@
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+spring:
+  application:
+    name: ms-pedidos360-bff
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  jackson:
+    default-property-inclusion: non_null
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+security:
+  jwt:
+    mode: ${JWT_MODE:entra}
+    issuer: ${ENTRA_ISSUER}
+    audience: ${ENTRA_API_AUDIENCE}
+    jwk-set-uri: ${ENTRA_JWK_SET_URI:}
+    local-secret: ${LOCAL_JWT_SECRET:pedidos360-local-secret-change-me-32-bytes-minimum}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+
+services:
+  http:
+    connect-timeout-ms: ${UPSTREAM_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${UPSTREAM_READ_TIMEOUT_MS:10000}
+  orders:
+    base-url: ${ORDERS_SERVICE_URL:http://localhost:8081}
+  catalog:
+    base-url: ${CATALOG_SERVICE_URL:http://localhost:8082}
+
+info:
+  app:
+    name: Pedidos360 BFF
+    description: Segunda validacion JWT y autorizacion; no accede a base de datos

@@ -1,0 +1,17 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+security:
+  jwt:
+    mode: local
+    issuer: https://login.microsoftonline.com/pedidos360-local/v2.0
+    audience: api://150f51db-4084-4979-b1a1-e6a6e7893a01
+    local-secret: pedidos360-local-secret-change-me-32-bytes-minimum
+
+services:
+  orders:
+    base-url: http://localhost:8081
+  catalog:
+    base-url: http://localhost:8082
