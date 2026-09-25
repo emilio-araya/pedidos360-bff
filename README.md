@@ -4,9 +4,9 @@ Backend for Frontend de Pedidos360. Es la única aplicación que el backend de n
 
 ## Responsabilidades
 
-- Configura Spring Security como OAuth2 Resource Server.
-- Valida firma, `iss`, `aud`, `exp` y `nbf` del JWT.
-- Convierte el claim `roles` de Entra ID en autoridades Spring `ROLE_*`.
+- Configura dos cadenas Spring Security independientes: Entra para `/api/**` y Cognito para `/aws/api/**`.
+- Valida firma, `iss`, audience/client ID, `exp`, `nbf` y `token_use=access` de Cognito.
+- Convierte `roles` de Entra y `cognito:groups` en autoridades Spring `ROLE_*`.
 - Aplica autorización por rol en la gestión de catálogo y estados operacionales.
 - Reenvía el Bearer y las peticiones a `orders` o `catalog`.
 - No incluye JDBC, JPA, driver de base de datos ni datasource.
@@ -19,6 +19,9 @@ Backend for Frontend de Pedidos360. Es la única aplicación que el backend de n
 | `ENTRA_ISSUER` | `https://login.microsoftonline.com/1feca74f-8331-414a-bd8d-2d687b22a7b3/v2.0` |
 | `ENTRA_API_AUDIENCE` | Application (client) ID GUID de la API |
 | `ENTRA_JWK_SET_URI` | Opcional; por defecto se descubre desde el issuer |
+| `COGNITO_ISSUER` | Issuer exacto de Cognito |
+| `COGNITO_API_AUDIENCE` | App Client ID público de Cognito |
+| `COGNITO_JWK_SET_URI` | JWKS de Cognito |
 | `CORS_ALLOWED_ORIGINS` | URL del frontend React separada por comas |
 | `ORDERS_SERVICE_URL` | URL privada de orders |
 | `CATALOG_SERVICE_URL` | URL privada de catalog |
@@ -36,6 +39,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=local
 TOKEN="$(scripts/generate-local-token.py --role Operador --oid emilio-local)"
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/catalog/products
 ```
+
+Las rutas `/api/**` solo aceptan el decoder de Entra y las rutas `/aws/api/**` solo aceptan el decoder de Cognito. El prefijo del proveedor se conserva al reenviar a Orders y Catalog. El token que se propaga es el JwtAuthenticationToken ya validado, no un header arbitrario.
 
 En producción:
 

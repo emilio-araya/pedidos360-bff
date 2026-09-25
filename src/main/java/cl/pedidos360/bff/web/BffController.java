@@ -12,6 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -25,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping({"/api", "/aws/api"})
 public class BffController {
 
     private static final String STAFF = "hasAnyRole('Admin', 'Operador')";
@@ -151,7 +153,7 @@ public class BffController {
     ) {
         String validatedAuthorization = validatedBearer(authorization);
         GatewayResponse response = proxyService.exchange(
-                upstream, method, path, query, body, validatedAuthorization);
+                upstream, method, preserveProviderPrefix(path), query, body, validatedAuthorization);
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(response.statusCode());
         if (StringUtils.hasText(response.contentType())) {
             builder.contentType(MediaType.parseMediaType(response.contentType()));
@@ -168,13 +170,23 @@ public class BffController {
     }
 
     private String validatedBearer(String authorizationHeader) {
+        if (SecurityContextHolder.getContext().getAuthentication()
+                instanceof JwtAuthenticationToken authentication) {
+            return "Bearer " + authentication.getToken().getTokenValue();
+        }
         if (StringUtils.hasText(authorizationHeader)) {
             return authorizationHeader;
         }
-        if (SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken authentication) {
-            return "Bearer " + authentication.getToken().getTokenValue();
-        }
         throw new IllegalStateException("No hay un token JWT autenticado");
+    }
+
+    private String preserveProviderPrefix(String path) {
+        if (RequestContextHolder.getRequestAttributes()
+                instanceof ServletRequestAttributes attributes
+                && attributes.getRequest().getRequestURI().startsWith("/aws/api")) {
+            return "/aws/api" + path.substring("/api".length());
+        }
+        return path;
     }
 
     private String productPath(String id) {

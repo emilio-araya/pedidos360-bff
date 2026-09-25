@@ -21,7 +21,7 @@ class SecurityConfigTest {
                 "pedidos360-local-secret-change-me-32-bytes-minimum"
         );
 
-        assertThatThrownBy(() -> new SecurityConfig().jwtDecoder(properties, new MockEnvironment()))
+        assertThatThrownBy(() -> new SecurityConfig().entraJwtDecoder(properties, new MockEnvironment()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("perfil Spring 'local'");
     }
