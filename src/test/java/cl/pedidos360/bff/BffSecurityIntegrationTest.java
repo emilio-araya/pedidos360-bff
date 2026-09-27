@@ -91,6 +91,18 @@ class BffSecurityIntegrationTest {
     }
 
     @Test
+    void preservesCognitoPrefixWithContextPathConfigured() throws Exception {
+        mockMvc.perform(get("/bff/aws/api/orders")
+                        .contextPath("/bff")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_Operador"))))
+                .andExpect(status().isOk());
+
+        verify(proxyService).exchange(
+                any(), any(), eq("/aws/api/orders"), nullable(MultiValueMap.class),
+                nullable(String.class), anyString());
+    }
+
+    @Test
     void rejectsClientCatalogAdministration() throws Exception {
         mockMvc.perform(post("/api/catalog/products")
                         .contentType(MediaType.APPLICATION_JSON)

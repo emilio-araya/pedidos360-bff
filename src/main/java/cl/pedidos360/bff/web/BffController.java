@@ -3,6 +3,7 @@ package cl.pedidos360.bff.web;
 import cl.pedidos360.bff.gateway.BffProxyService;
 import cl.pedidos360.bff.gateway.GatewayResponse;
 import cl.pedidos360.bff.gateway.Upstream;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -181,10 +182,21 @@ public class BffController {
     }
 
     private String preserveProviderPrefix(String path) {
+        // Se compara la ruta dentro de la aplicacion, no el URI completo:
+        // getRequestURI() incluye el context path, asi que con
+        // server.servlet.context-path configurado una peticion a
+        // /bff/aws/api/orders no reconoceria el prefijo y se reenviaria a
+        // /api/orders, es decir al namespace equivocado.
         if (RequestContextHolder.getRequestAttributes()
-                instanceof ServletRequestAttributes attributes
-                && attributes.getRequest().getRequestURI().startsWith("/aws/api")) {
-            return "/aws/api" + path.substring("/api".length());
+                instanceof ServletRequestAttributes attributes) {
+            HttpServletRequest request = attributes.getRequest();
+            String uri = request.getRequestURI();
+            String contextPath = request.getContextPath();
+            String pathWithinApplication =
+                    contextPath == null || contextPath.isEmpty() ? uri : uri.substring(contextPath.length());
+            if (pathWithinApplication.startsWith("/aws/api")) {
+                return "/aws/api" + path.substring("/api".length());
+            }
         }
         return path;
     }
