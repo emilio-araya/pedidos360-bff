@@ -27,6 +27,10 @@ security:
     audience: ${ENTRA_API_AUDIENCE}
     jwk-set-uri: ${ENTRA_JWK_SET_URI:}
     local-secret: ${LOCAL_JWT_SECRET:pedidos360-local-secret-change-me-32-bytes-minimum}
+  cognito:
+    issuer: ${COGNITO_ISSUER:}
+    audience: ${COGNITO_API_AUDIENCE:}
+    jwk-set-uri: ${COGNITO_JWK_SET_URI:}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
 

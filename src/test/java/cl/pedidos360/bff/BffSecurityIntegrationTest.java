@@ -2,8 +2,10 @@ package cl.pedidos360.bff;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -78,6 +80,17 @@ class BffSecurityIntegrationTest {
     }
 
     @Test
+    void allowsAuthenticatedCognitoRouteWithOperatorRole() throws Exception {
+        mockMvc.perform(get("/aws/api/orders")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_Operador"))))
+                .andExpect(status().isOk());
+
+        verify(proxyService).exchange(
+                any(), any(), eq("/aws/api/orders"), nullable(MultiValueMap.class),
+                nullable(String.class), anyString());
+    }
+
+    @Test
     void rejectsClientCatalogAdministration() throws Exception {
         mockMvc.perform(post("/api/catalog/products")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,6 +143,13 @@ class BffSecurityIntegrationTest {
                         .header(HttpHeaders.ORIGIN, "http://localhost:4200")
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "authorization,content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"));
+
+        mockMvc.perform(options("/aws/api/orders")
+                        .header(HttpHeaders.ORIGIN, "http://localhost:4200")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "authorization"))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"));
     }
