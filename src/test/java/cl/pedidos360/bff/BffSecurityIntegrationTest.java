@@ -41,6 +41,15 @@ import org.springframework.util.MultiValueMap;
 @ActiveProfiles("local")
 class BffSecurityIntegrationTest {
 
+    /**
+     * El metodo exchange recibe MultiValueMap&lt;String, String&gt;, pero el matcher de
+     * Mockito exige la clase del parametro. Sin esta constante, nullable(MultiValueMap.class)
+     * pasa una clase cruda y el compilador avisa de conversion no comprobada en cada uso.
+     */
+    @SuppressWarnings("unchecked")
+    private static final Class<MultiValueMap<String, String>> MULTI_VALUE_MAP_TYPE =
+            (Class<MultiValueMap<String, String>>) (Class<?>) MultiValueMap.class;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -54,7 +63,7 @@ class BffSecurityIntegrationTest {
                         any(),
                         any(),
                         anyString(),
-                        nullable(MultiValueMap.class),
+                        nullable(MULTI_VALUE_MAP_TYPE),
                         nullable(String.class),
                         anyString()))
                 .thenReturn(new GatewayResponse(
@@ -86,7 +95,7 @@ class BffSecurityIntegrationTest {
                 .andExpect(status().isOk());
 
         verify(proxyService).exchange(
-                any(), any(), eq("/aws/api/orders"), nullable(MultiValueMap.class),
+                any(), any(), eq("/aws/api/orders"), nullable(MULTI_VALUE_MAP_TYPE),
                 nullable(String.class), anyString());
     }
 
@@ -98,7 +107,7 @@ class BffSecurityIntegrationTest {
                 .andExpect(status().isOk());
 
         verify(proxyService).exchange(
-                any(), any(), eq("/aws/api/orders"), nullable(MultiValueMap.class),
+                any(), any(), eq("/aws/api/orders"), nullable(MULTI_VALUE_MAP_TYPE),
                 nullable(String.class), anyString());
     }
 
@@ -115,7 +124,7 @@ class BffSecurityIntegrationTest {
     void allowsOperatorCatalogAdministration() throws Exception {
         lenient()
                 .when(proxyService.exchange(
-                        any(), any(), anyString(), nullable(MultiValueMap.class), nullable(String.class), anyString()))
+                        any(), any(), anyString(), nullable(MULTI_VALUE_MAP_TYPE), nullable(String.class), anyString()))
                 .thenReturn(new GatewayResponse(
                         HttpStatus.CREATED,
                         "{}",

@@ -1,4 +1,4 @@
-package com.pedidos360.bff.config;
+package cl.pedidos360.bff.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
