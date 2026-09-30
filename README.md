@@ -1,5 +1,10 @@
 # ms-pedidos360-bff
 
+[![CI](https://github.com/emilio-araya/pedidos360-bff/actions/workflows/ci.yml/badge.svg)](https://github.com/emilio-araya/pedidos360-bff/actions/workflows/ci.yml)
+[![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.7-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![MSAL](https://img.shields.io/badge/MSAL-5.7.1-0078D4?logo=microsoftazure&logoColor=white)](https://github.com/AzureAD/microsoft-authentication-library-for-js)
+
 Backend for Frontend de Pedidos360. Es la única aplicación que el backend de negocio consume después de AWS API Gateway.
 
 ## Responsabilidades
