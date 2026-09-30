@@ -41,11 +41,6 @@ import org.springframework.util.MultiValueMap;
 @ActiveProfiles("local")
 class BffSecurityIntegrationTest {
 
-    /**
-     * El metodo exchange recibe MultiValueMap&lt;String, String&gt;, pero el matcher de
-     * Mockito exige la clase del parametro. Sin esta constante, nullable(MultiValueMap.class)
-     * pasa una clase cruda y el compilador avisa de conversion no comprobada en cada uso.
-     */
     @SuppressWarnings("unchecked")
     private static final Class<MultiValueMap<String, String>> MULTI_VALUE_MAP_TYPE =
             (Class<MultiValueMap<String, String>>) (Class<?>) MultiValueMap.class;
