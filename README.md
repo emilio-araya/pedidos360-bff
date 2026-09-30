@@ -53,3 +53,19 @@ En producción:
 mvn clean package
 java -jar target/ms-pedidos360-bff-1.0.0.jar
 ```
+
+## Pruebas y cobertura
+
+```bash
+mvn verify
+```
+
+Las pruebas cubren el enrutado por prefijo de proveedor, la propagación del `JwtAuthenticationToken`, los validadores de issuer y audience, el manejo de tokens de Cognito sin claim `aud` y el aislamiento de las dos cadenas de Spring Security.
+
+| Métrica | Valor |
+|---|---|
+| Pruebas | 26 |
+| Cobertura de líneas | 76.4% |
+| Cobertura de instrucciones | 74.9% |
+
+La CI ejecuta `mvn verify` en cada push y pull request, muestra el resumen en la página del workflow y adjunta el informe HTML de JaCoCo como artefacto. La cobertura de instrucciones es un umbral: el build falla si baja del 70%.
