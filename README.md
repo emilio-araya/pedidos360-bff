@@ -14,6 +14,7 @@ Backend for Frontend de Pedidos360. Es la única aplicación que el backend de n
 - Convierte `roles` de Entra y `cognito:groups` en autoridades Spring `ROLE_*`.
 - Aplica autorización por rol en la gestión de catálogo y estados operacionales.
 - Reenvía el Bearer y las peticiones a `orders` o `catalog`.
+- Propaga `X-Request-Id`: lo respeta si viene del cliente, genera un UUID si falta o es inseguro, y usa el mismo id para todas las llamadas a upstream de esa request.
 - No incluye JDBC, JPA, driver de base de datos ni datasource.
 
 ## Configuración cloud
@@ -64,8 +65,8 @@ Las pruebas cubren el enrutado por prefijo de proveedor, la propagación del `Jw
 
 | Métrica | Valor |
 |---|---|
-| Pruebas | 26 |
-| Cobertura de líneas | 76.4% |
-| Cobertura de instrucciones | 74.9% |
+| Pruebas | 30 |
+| Cobertura de líneas | 77.4% |
+| Cobertura de instrucciones | 75.7% |
 
 La CI ejecuta `mvn verify` en cada push y pull request, muestra el resumen en la página del workflow y adjunta el informe HTML de JaCoCo como artefacto. La cobertura de instrucciones es un umbral: el build falla si baja del 70%.

@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
+import org.slf4j.MDC;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -29,6 +30,7 @@ class BffProxyServiceTest {
 
     @AfterEach
     void stopServer() {
+        MDC.clear();
         server.stop(0);
     }
 
@@ -59,6 +61,24 @@ class BffProxyServiceTest {
         assertThat(captured.get().body()).isEqualTo("{\"items\":[]}");
         assertThat(captured.get().query()).isEqualTo("status=CREADO&customer=cliente%20uno");
         assertThat(captured.get().requestId()).isNotBlank();
+    }
+
+    @Test
+    void reusesTheRequestIdOfTheCurrentRequestInsteadOfGeneratingOnePerCall() {
+        MDC.put("requestId", "checkout-abc-123");
+        BffProxyService service = new BffProxyService(
+                "http://127.0.0.1:" + server.getAddress().getPort(),
+                "http://localhost:1"
+        );
+
+        GatewayResponse first = service.exchange(
+                Upstream.ORDERS, HttpMethod.GET, "/api/orders", null, null, "Bearer validated-token");
+        GatewayResponse second = service.exchange(
+                Upstream.ORDERS, HttpMethod.GET, "/api/orders", null, null, "Bearer validated-token");
+
+        assertThat(first.requestId()).isEqualTo("checkout-abc-123");
+        assertThat(second.requestId()).isEqualTo("checkout-abc-123");
+        assertThat(captured.get().requestId()).isEqualTo("checkout-abc-123");
     }
 
     private void respond(HttpExchange exchange) throws IOException {

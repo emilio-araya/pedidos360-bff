@@ -1,10 +1,10 @@
 package cl.pedidos360.bff.gateway;
 
+import cl.pedidos360.bff.RequestId;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -73,12 +73,14 @@ public class BffProxyService {
             queryParameters.forEach((name, values) -> values.forEach(value -> uriBuilder.queryParam(name, value)));
         }
 
-        String requestId = UUID.randomUUID().toString();
+        // Mismo id para toda la request: si dos llamadas del BFF generaran
+        // ids distintos, la correlación se cortaría dentro del propio servicio.
+        String requestId = RequestId.currentOrNew();
         RestClient.RequestBodySpec request = client
                 .method(method)
                 .uri(uriBuilder.build().encode().toUri())
                 .header(HttpHeaders.AUTHORIZATION, authorization)
-                .header("X-Request-Id", requestId)
+                .header(RequestId.HEADER, requestId)
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 
         if (body != null) {

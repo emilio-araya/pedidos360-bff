@@ -47,3 +47,8 @@ info:
   app:
     name: Pedidos360 BFF
     description: Segunda validacion JWT y autorizacion; no accede a base de datos
+
+logging:
+  pattern:
+    # %X{requestId} imprime el id de correlación; "-" cuando no hay request en curso.
+    level: "%5p [%X{requestId:--}]"
