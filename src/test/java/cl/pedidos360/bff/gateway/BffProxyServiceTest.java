@@ -81,6 +81,20 @@ class BffProxyServiceTest {
         assertThat(captured.get().requestId()).isEqualTo("checkout-abc-123");
     }
 
+    @Test
+    void forwardsAnonymousCatalogReadsWithoutAuthorizationHeader() {
+        BffProxyService service = new BffProxyService(
+                "http://127.0.0.1:" + server.getAddress().getPort(),
+                "http://localhost:1"
+        );
+
+        GatewayResponse response = service.exchange(
+                Upstream.ORDERS, HttpMethod.GET, "/api/orders", null, null, null);
+
+        assertThat(response.statusCode().value()).isEqualTo(202);
+        assertThat(captured.get().authorization()).isNull();
+    }
+
     private void respond(HttpExchange exchange) throws IOException {
         captured.set(new CapturedRequest(
                 exchange.getRequestMethod(),
