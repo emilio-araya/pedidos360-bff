@@ -60,7 +60,7 @@ class BffSecurityIntegrationTest {
                         anyString(),
                         nullable(MULTI_VALUE_MAP_TYPE),
                         nullable(String.class),
-                        anyString()))
+                        nullable(String.class)))
                 .thenReturn(new GatewayResponse(
                         HttpStatus.OK,
                         "[]",
@@ -73,6 +73,20 @@ class BffSecurityIntegrationTest {
     @Test
     void rejectsProtectedRouteWithoutToken() throws Exception {
         mockMvc.perform(get("/api/orders"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void allowsAnonymousVisitorToReadTheCatalog() throws Exception {
+        mockMvc.perform(get("/api/catalog/products"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void stillRejectsAnonymousOrderCreation() throws Exception {
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isUnauthorized());
     }
 
