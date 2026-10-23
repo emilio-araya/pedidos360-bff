@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -79,9 +80,14 @@ public class BffProxyService {
         RestClient.RequestBodySpec request = client
                 .method(method)
                 .uri(uriBuilder.build().encode().toUri())
-                .header(HttpHeaders.AUTHORIZATION, authorization)
                 .header(RequestId.HEADER, requestId)
                 .header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+
+        // La vitrina publica viaja sin credenciales y RestClient rechaza un
+        // valor nulo: el header se agrega solo cuando hay token que reenviar.
+        if (StringUtils.hasText(authorization)) {
+            request = request.header(HttpHeaders.AUTHORIZATION, authorization);
+        }
 
         if (body != null) {
             request.contentType(MediaType.APPLICATION_JSON).body(body);

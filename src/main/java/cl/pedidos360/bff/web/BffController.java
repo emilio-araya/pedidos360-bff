@@ -44,7 +44,7 @@ public class BffController {
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @RequestParam MultiValueMap<String, String> query
     ) {
-        return exchange(Upstream.CATALOG, HttpMethod.GET, "/api/catalog/products", query, null, authorization);
+        return exchangePublic(Upstream.CATALOG, HttpMethod.GET, "/api/catalog/products", query, authorization);
     }
 
     @GetMapping("/catalog/products/{id}")
@@ -52,7 +52,7 @@ public class BffController {
             @PathVariable String id,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
     ) {
-        return exchange(Upstream.CATALOG, HttpMethod.GET, productPath(id), null, null, authorization);
+        return exchangePublic(Upstream.CATALOG, HttpMethod.GET, productPath(id), null, authorization);
     }
 
     @PostMapping("/catalog/products")
@@ -144,6 +144,7 @@ public class BffController {
         return exchange(Upstream.ORDERS, HttpMethod.PATCH, orderPath(id) + "/status", null, body, authorization);
     }
 
+    /** Rutas protegidas: sin credenciales no se reenvia nada. */
     private ResponseEntity<String> exchange(
             Upstream upstream,
             HttpMethod method,
@@ -152,9 +153,30 @@ public class BffController {
             String body,
             String authorization
     ) {
-        String validatedAuthorization = validatedBearer(authorization);
+        return forward(upstream, method, path, query, body, requiredBearer(authorization));
+    }
+
+    /** Solo la vitrina del catalogo: lectura que se reenvia con o sin usuario. */
+    private ResponseEntity<String> exchangePublic(
+            Upstream upstream,
+            HttpMethod method,
+            String path,
+            MultiValueMap<String, String> query,
+            String authorization
+    ) {
+        return forward(upstream, method, path, query, null, optionalBearer(authorization));
+    }
+
+    private ResponseEntity<String> forward(
+            Upstream upstream,
+            HttpMethod method,
+            String path,
+            MultiValueMap<String, String> query,
+            String body,
+            String bearer
+    ) {
         GatewayResponse response = proxyService.exchange(
-                upstream, method, preserveProviderPrefix(path), query, body, validatedAuthorization);
+                upstream, method, preserveProviderPrefix(path), query, body, bearer);
         ResponseEntity.BodyBuilder builder = ResponseEntity.status(response.statusCode());
         if (StringUtils.hasText(response.contentType())) {
             builder.contentType(MediaType.parseMediaType(response.contentType()));
@@ -170,7 +192,15 @@ public class BffController {
         return builder.body(response.body());
     }
 
-    private String validatedBearer(String authorizationHeader) {
+    private String requiredBearer(String authorizationHeader) {
+        String bearer = optionalBearer(authorizationHeader);
+        if (bearer == null) {
+            throw new IllegalStateException("No hay un token JWT autenticado");
+        }
+        return bearer;
+    }
+
+    private String optionalBearer(String authorizationHeader) {
         if (SecurityContextHolder.getContext().getAuthentication()
                 instanceof JwtAuthenticationToken authentication) {
             return "Bearer " + authentication.getToken().getTokenValue();
@@ -178,7 +208,7 @@ public class BffController {
         if (StringUtils.hasText(authorizationHeader)) {
             return authorizationHeader;
         }
-        throw new IllegalStateException("No hay un token JWT autenticado");
+        return null;
     }
 
     private String preserveProviderPrefix(String path) {

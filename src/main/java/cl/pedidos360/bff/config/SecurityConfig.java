@@ -53,6 +53,11 @@ public class SecurityConfig {
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // La vitrina es publica: el visitante ve el catalogo
+                        // antes de iniciar sesion. El resto del namespace sigue
+                        // exigiendo token.
+                        .requestMatchers(HttpMethod.GET, "/api/catalog/products", "/api/catalog/products/**")
+                        .permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2
@@ -71,6 +76,11 @@ public class SecurityConfig {
                 .securityMatcher("/aws/api/**")
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/aws/api/catalog/products",
+                                "/aws/api/catalog/products/**")
+                        .permitAll()
                         .requestMatchers("/aws/api/**").authenticated()
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2
