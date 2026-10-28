@@ -48,6 +48,21 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/catalog/product
 
 Las rutas `/api/**` solo aceptan el decoder de Entra y las rutas `/aws/api/**` solo aceptan el decoder de Cognito. El prefijo del proveedor se conserva al reenviar a Orders y Catalog. El token que se propaga es el JwtAuthenticationToken ya validado, no un header arbitrario.
 
+## Rutas públicas
+
+Estas rutas no exigen token y existen solo en el namespace de Entra (`/api/**`); en `/aws/api/**` siguen protegidas.
+
+| Método | Ruta | Destino | Cuerpo |
+|---|---|---|---|
+| `GET` | `/api/catalog/products` | catalog | No |
+| `GET` | `/api/catalog/products/{id}` | catalog | No |
+| `POST` | `/api/guest-orders` | orders | JSON |
+| `GET` | `/api/guest-orders/{token}` | orders | No |
+| `POST` | `/api/guest-orders/{token}/cancel` | orders | No |
+| `POST` | `/api/guest-orders/link-requests` | orders | JSON |
+
+Las rutas de invitado se reenvían a `orders` en la misma ruta y nunca llevan `Authorization`, aunque el cliente envíe uno: el token de seguimiento de la ruta es la única prueba y un bearer vencido haría que `orders` respondiera `401`. El BFF tampoco lee ese header en esas rutas. El estado, el ProblemDetail y `X-Request-Id` se devuelven tal como los entrega `orders`. `{token}` pasa por la misma validación de segmento que los demás identificadores. `/api/orders` sigue exigiendo token.
+
 En producción:
 
 ```bash
