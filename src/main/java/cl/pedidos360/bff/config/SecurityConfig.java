@@ -32,7 +32,11 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -41,6 +45,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 @EnableConfigurationProperties(CognitoSecurityProperties.class)
 public class SecurityConfig {
+
+    private static final String GUEST_ORDERS = "/api/guest-orders";
 
     @Bean
     @Order(1)
@@ -58,11 +64,28 @@ public class SecurityConfig {
                         // exigiendo token.
                         .requestMatchers(HttpMethod.GET, "/api/catalog/products", "/api/catalog/products/**")
                         .permitAll()
+                        // Compra como invitado: el token de seguimiento de la
+                        // ruta es la unica prueba; no hay usuario que autenticar.
+                        .requestMatchers(HttpMethod.POST, GUEST_ORDERS, GUEST_ORDERS + "/link-requests",
+                                GUEST_ORDERS + "/*/cancel")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, GUEST_ORDERS + "/*").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(ignoringGuestOrders())
                         .jwt(jwt -> jwt.decoder(decoder).jwtAuthenticationConverter(converter)))
                 .build();
+    }
+
+    /**
+     * En las rutas de invitado no se lee el header Authorization: un bearer
+     * vencido o ajeno responderia 401 antes de llegar al controlador.
+     */
+    private static BearerTokenResolver ignoringGuestOrders() {
+        RequestMatcher guestOrders = PathPatternRequestMatcher.withDefaults().matcher(GUEST_ORDERS + "/**");
+        DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
+        return request -> guestOrders.matches(request) ? null : delegate.resolve(request);
     }
 
     @Bean

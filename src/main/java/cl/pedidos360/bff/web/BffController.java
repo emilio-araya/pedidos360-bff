@@ -6,7 +6,6 @@ import cl.pedidos360.bff.gateway.Upstream;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -177,19 +176,7 @@ public class BffController {
     ) {
         GatewayResponse response = proxyService.exchange(
                 upstream, method, preserveProviderPrefix(path), query, body, bearer);
-        ResponseEntity.BodyBuilder builder = ResponseEntity.status(response.statusCode());
-        if (StringUtils.hasText(response.contentType())) {
-            builder.contentType(MediaType.parseMediaType(response.contentType()));
-        } else if (response.body() != null) {
-            builder.contentType(MediaType.APPLICATION_JSON);
-        }
-        if (response.location() != null) {
-            builder.header(HttpHeaders.LOCATION, response.location());
-        }
-        if (response.requestId() != null) {
-            builder.header("X-Request-Id", response.requestId());
-        }
-        return builder.body(response.body());
+        return ForwardingSupport.toResponseEntity(response);
     }
 
     private String requiredBearer(String authorizationHeader) {
@@ -232,17 +219,10 @@ public class BffController {
     }
 
     private String productPath(String id) {
-        return "/api/catalog/products/" + segment(id);
+        return "/api/catalog/products/" + ForwardingSupport.segment(id);
     }
 
     private String orderPath(String id) {
-        return "/api/orders/" + segment(id);
-    }
-
-    private String segment(String value) {
-        if (value == null || !value.matches("[A-Za-z0-9-]{1,100}")) {
-            throw new IllegalArgumentException("Identificador no válido");
-        }
-        return value;
+        return "/api/orders/" + ForwardingSupport.segment(id);
     }
 }
