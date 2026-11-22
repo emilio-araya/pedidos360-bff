@@ -3,7 +3,6 @@
 [![CI](https://github.com/emilio-araya/pedidos360-bff/actions/workflows/ci.yml/badge.svg)](https://github.com/emilio-araya/pedidos360-bff/actions/workflows/ci.yml)
 [![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.7-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![MSAL](https://img.shields.io/badge/MSAL-5.7.1-0078D4?logo=microsoftazure&logoColor=white)](https://github.com/AzureAD/microsoft-authentication-library-for-js)
 
 Backend for Frontend de Pedidos360. Es la única aplicación que el backend de negocio consume después de AWS API Gateway.
 
@@ -80,8 +79,8 @@ Las pruebas cubren el enrutado por prefijo de proveedor, la propagación del `Jw
 
 | Métrica | Valor |
 |---|---|
-| Pruebas | 30 |
-| Cobertura de líneas | 77.4% |
-| Cobertura de instrucciones | 75.7% |
+| Pruebas | 45 |
+| Cobertura de líneas | 82.28% |
+| Cobertura de instrucciones | 80.65% |
 
 La CI ejecuta `mvn verify` en cada push y pull request, muestra el resumen en la página del workflow y adjunta el informe HTML de JaCoCo como artefacto. La cobertura de instrucciones es un umbral: el build falla si baja del 70%.
